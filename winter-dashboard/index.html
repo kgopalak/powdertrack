@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PowderTrack — Winter Sports Dashboard</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- Feather Icons -->
+  <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+</head>
+<body>
+
+<!-- ══════════════════════ HEADER ══════════════════════ -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="logo">
+      <span class="logo-icon">❄</span>
+      <span class="logo-text">PowderTrack</span>
+    </div>
+
+    <nav class="main-nav">
+      <a href="#" class="nav-link active">Resorts</a>
+      <a href="#" class="nav-link">Forecasts</a>
+      <a href="#" class="nav-link">Reports</a>
+      <a href="#" class="nav-link">Trail Maps</a>
+    </nav>
+
+    <div class="header-actions">
+      <div class="search-wrap">
+        <i data-feather="search" class="search-icon"></i>
+        <input id="searchInput" type="text" placeholder="Search resorts or regions…" class="search-input" />
+      </div>
+      <button class="btn-primary">Pro</button>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════════ HERO / ALERT BANNER ══════════════════════ -->
+<div class="alert-banner">
+  <i data-feather="alert-circle"></i>
+  <span><strong>Storm Alert:</strong> 18–28" forecast for Sierra Nevada and Wasatch Front this weekend. <a href="#">See full forecast →</a></span>
+</div>
+
+<!-- ══════════════════════ MAIN LAYOUT ══════════════════════ -->
+<main class="main-layout">
+
+  <!-- ── LEFT SIDEBAR ── -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <h3 class="sidebar-title">Filter Regions</h3>
+      <div class="region-list" id="regionList">
+        <button class="region-btn active" data-region="all">All Regions</button>
+        <button class="region-btn" data-region="sierra">Sierra Nevada</button>
+        <button class="region-btn" data-region="wasatch">Wasatch (Utah)</button>
+        <button class="region-btn" data-region="rockies">Colorado Rockies</button>
+        <button class="region-btn" data-region="cascades">Cascades (PNW)</button>
+        <button class="region-btn" data-region="alps">Alps (Europe)</button>
+        <button class="region-btn" data-region="japan">Japan (Hokkaido)</button>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <h3 class="sidebar-title">Snow Depth Filter</h3>
+      <div class="filter-row">
+        <label class="filter-label">Min Base (in)</label>
+        <input type="range" id="minBase" min="0" max="200" value="0" class="range-slider" />
+        <span id="minBaseVal" class="range-val">0"</span>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <h3 class="sidebar-title">Sort By</h3>
+      <select id="sortSelect" class="sort-select">
+        <option value="fresh">Fresh Snow (48h)</option>
+        <option value="base">Base Depth</option>
+        <option value="forecast">7-Day Forecast</option>
+        <option value="rating">Powder Rating</option>
+      </select>
+    </div>
+
+    <div class="sidebar-section">
+      <h3 class="sidebar-title">Units</h3>
+      <div class="unit-toggle">
+        <button class="unit-btn active" id="unitInches">Inches / °F</button>
+        <button class="unit-btn" id="unitCm">CM / °C</button>
+      </div>
+    </div>
+
+    <!-- My Favorites -->
+    <div class="sidebar-section">
+      <h3 class="sidebar-title">My Favorites</h3>
+      <div id="favoritesList" class="favorites-list">
+        <p class="empty-fav">Click ★ on a resort to save it here.</p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── CONTENT AREA ── -->
+  <div class="content-area">
+
+    <!-- ── TOP STATS BAR ── -->
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-icon blue"><i data-feather="cloud-snow"></i></div>
+        <div>
+          <div class="stat-value" id="statFresh">14"</div>
+          <div class="stat-label">Best 48h New Snow</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon purple"><i data-feather="layers"></i></div>
+        <div>
+          <div class="stat-value" id="statBase">192"</div>
+          <div class="stat-label">Deepest Base</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon teal"><i data-feather="trending-up"></i></div>
+        <div>
+          <div class="stat-value" id="statForecast">36"</div>
+          <div class="stat-label">Best 7-Day Forecast</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon green"><i data-feather="wind"></i></div>
+        <div>
+          <div class="stat-value" id="statResorts">24</div>
+          <div class="stat-label">Resorts Open</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── FEATURED FORECAST CHART ── -->
+    <div class="chart-panel">
+      <div class="panel-header">
+        <h2 class="panel-title">7-Day Snowfall Forecast</h2>
+        <div class="chart-legend">
+          <span class="legend-dot blue"></span><span>Snowfall (in)</span>
+          <span class="legend-dot orange" style="margin-left:1rem"></span><span>Temp High (°F)</span>
+        </div>
+        <div class="resort-selector-wrap">
+          <select id="chartResortSelect" class="chart-select"></select>
+        </div>
+      </div>
+      <div class="chart-container">
+        <canvas id="forecastChart"></canvas>
+      </div>
+    </div>
+
+    <!-- ── RESORT GRID ── -->
+    <div class="grid-header">
+      <h2 class="section-title">Resort Conditions</h2>
+      <span id="resortCount" class="resort-count">Showing 12 resorts</span>
+    </div>
+
+    <div class="resort-grid" id="resortGrid">
+      <!-- Cards injected by JS -->
+    </div>
+
+  </div>
+
+  <!-- ── RIGHT PANEL ── -->
+  <aside class="right-panel">
+
+    <div class="panel-block">
+      <h3 class="panel-block-title"><i data-feather="star"></i> Top Powder Picks</h3>
+      <div id="powderPicks" class="picks-list"></div>
+    </div>
+
+    <div class="panel-block">
+      <h3 class="panel-block-title"><i data-feather="thermometer"></i> Current Conditions</h3>
+      <div id="conditionsSummary" class="conditions-summary"></div>
+    </div>
+
+    <div class="panel-block">
+      <h3 class="panel-block-title"><i data-feather="sun"></i> Weather Outlook</h3>
+      <canvas id="tempChart" height="160"></canvas>
+    </div>
+
+    <div class="panel-block">
+      <h3 class="panel-block-title"><i data-feather="map-pin"></i> Season Snowfall</h3>
+      <canvas id="seasonChart" height="160"></canvas>
+    </div>
+
+  </aside>
+
+</main>
+
+<!-- ══════════════════════ RESORT DETAIL MODAL ══════════════════════ -->
+<div id="resortModal" class="modal-overlay" hidden>
+  <div class="modal">
+    <button class="modal-close" id="modalClose"><i data-feather="x"></i></button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
