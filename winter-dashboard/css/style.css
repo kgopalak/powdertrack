@@ -461,6 +461,261 @@ button { cursor: pointer; font-family: inherit; }
 .forecast-table td.med-snow  { color: #93c5fd; font-weight: 600; }
 
 /* ══════════════════════════════════════════════════════════════
+   ADD RESORT BUTTON
+   ══════════════════════════════════════════════════════════════ */
+.btn-add-resort {
+  display: flex; align-items: center; gap: .4rem;
+  background: rgba(45,212,191,.12); border: 1px solid rgba(45,212,191,.3);
+  color: var(--accent-teal); border-radius: 8px;
+  padding: .45rem 1rem; font-size: .875rem; font-weight: 600;
+  transition: background .15s, border-color .15s;
+  white-space: nowrap;
+}
+.btn-add-resort:hover { background: rgba(45,212,191,.22); border-color: rgba(45,212,191,.5); }
+.btn-add-resort svg { width: 14px; height: 14px; }
+
+/* ══════════════════════════════════════════════════════════════
+   CUSTOM BADGE
+   ══════════════════════════════════════════════════════════════ */
+.badge.badge-custom { background: rgba(45,212,191,.12); color: var(--accent-teal); border: 1px solid rgba(45,212,191,.3); }
+.badge.avalanche.badge-unknown { background: rgba(100,116,139,.12); color: #94a3b8; border: 1px solid rgba(100,116,139,.3); }
+
+/* ══════════════════════════════════════════════════════════════
+   FULL-WIDTH VIEWS (Forecasts / Reports / Trail Maps)
+   ══════════════════════════════════════════════════════════════ */
+.full-view {
+  max-width: 1600px; margin: 0 auto;
+  padding: 1.5rem;
+}
+.full-view-inner { display: flex; flex-direction: column; gap: 1.5rem; }
+.full-view-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  flex-wrap: wrap; gap: 1rem;
+}
+.full-view-title { font-size: 1.5rem; font-weight: 800; margin-bottom: .2rem; }
+.full-view-subtitle { font-size: .875rem; color: var(--text-secondary); }
+
+/* ── Forecasts View ── */
+.forecast-date-range { font-size: .875rem; color: var(--text-secondary); margin-top: .15rem; }
+.fv-controls { display: flex; align-items: center; gap: 1rem; }
+.fv-resort-select { width: 240px; }
+
+.forecast-full-chart-wrap {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.5rem;
+  height: 420px; position: relative;
+}
+
+.forecast-compare-section { display: flex; flex-direction: column; gap: 1rem; }
+.forecast-compare-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+.compare-resort-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1rem;
+  display: flex; flex-direction: column; gap: .75rem;
+}
+.compare-header { display: flex; justify-content: space-between; align-items: flex-start; }
+.compare-name { font-size: .9rem; font-weight: 700; }
+.compare-loc { font-size: .72rem; color: var(--text-dim); margin-top: .1rem; }
+.compare-total { font-size: 1.3rem; font-weight: 800; color: var(--accent-blue); text-align: right; }
+.compare-total-lbl { font-size: .7rem; color: var(--text-dim); font-weight: 400; }
+.compare-days { display: flex; gap: .3rem; align-items: flex-end; }
+.compare-day { flex: 1; display: flex; flex-direction: column; align-items: center; gap: .2rem; }
+.compare-bar-wrap { height: 40px; display: flex; align-items: flex-end; width: 100%; }
+.compare-bar {
+  width: 100%; border-radius: 3px 3px 0 0; min-height: 2px;
+  transition: opacity .15s;
+}
+.compare-bar:hover { opacity: .8; }
+.compare-bar.fc-bar-high { background: var(--accent-blue); }
+.compare-bar.fc-bar-med  { background: rgba(99,179,237,.6); }
+.compare-bar.fc-bar-low  { background: rgba(99,179,237,.25); }
+.compare-snow-val { font-size: .65rem; color: var(--accent-blue); font-weight: 600; min-height: .9rem; }
+.compare-date { font-size: .6rem; color: var(--text-dim); }
+
+/* ── Reports View ── */
+.table-scroll-wrap { overflow-x: auto; border-radius: var(--radius); }
+.reports-table {
+  width: 100%; border-collapse: collapse;
+  background: var(--bg-card); border-radius: var(--radius);
+  overflow: hidden;
+}
+.reports-table th {
+  background: var(--bg-dark); padding: .7rem .9rem;
+  text-align: left; font-size: .75rem; color: var(--text-dim);
+  font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+  white-space: nowrap; border-bottom: 1px solid var(--border);
+}
+.reports-table th.sortable-th { cursor: pointer; user-select: none; }
+.reports-table th.sortable-th:hover { color: var(--text-secondary); }
+.reports-table th.active-sort { color: var(--accent-blue); }
+.sort-arrow { display: inline; font-size: .85em; }
+.reports-table td {
+  padding: .65rem .9rem; border-bottom: 1px solid var(--border-soft);
+  font-size: .83rem; color: var(--text-secondary); white-space: nowrap;
+}
+.report-row { cursor: pointer; transition: background .15s; }
+.report-row:hover td { background: rgba(255,255,255,.03); }
+.report-name { display: flex; align-items: center; }
+.rname { font-weight: 600; color: var(--text-primary); }
+.num-cell { font-weight: 700; color: var(--text-primary); }
+.num-cell.accent { color: var(--accent-blue); }
+.num-cell.green  { color: var(--accent-teal); }
+.num-cell.yellow { color: var(--accent-yellow); }
+.region-tag {
+  font-size: .72rem; padding: .15rem .45rem; border-radius: 4px;
+  background: rgba(255,255,255,.06); color: var(--text-dim);
+}
+.danger-badge {
+  font-size: .72rem; padding: .18rem .5rem; border-radius: 4px;
+  font-weight: 600; text-transform: uppercase; letter-spacing: .04em;
+}
+.danger-low { background: rgba(74,222,128,.12); color: #86efac; }
+.danger-mod { background: rgba(251,191,36,.1); color: #fcd34d; }
+.danger-con { background: rgba(249,115,22,.12); color: #fdba74; }
+.danger-high { background: rgba(248,113,113,.12); color: #fca5a5; }
+.danger-ext { background: rgba(220,38,38,.2); color: #f87171; }
+
+/* ── Trail Maps View ── */
+.trailmap-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+.trailmap-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.1rem;
+  display: flex; flex-direction: column; gap: .85rem;
+}
+.tm-header {}
+.tm-name { font-size: .95rem; font-weight: 700; }
+.tm-loc { font-size: .75rem; color: var(--text-dim); margin-top: .1rem; }
+.tm-terrain { display: flex; flex-direction: column; gap: .35rem; }
+.tm-terrain-labels {
+  display: flex; gap: .75rem; font-size: .72rem;
+}
+.tm-beg { color: #4ade80; }
+.tm-int { color: #60a5fa; }
+.tm-adv { color: #f87171; }
+.tm-stats {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: .5rem;
+  text-align: center;
+}
+.tm-stat strong { display: block; font-size: 1rem; font-weight: 800; color: var(--text-primary); }
+.tm-stat span { font-size: .68rem; color: var(--text-dim); }
+.tm-actions { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .25rem; }
+.tm-btn {
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .4rem .85rem; border-radius: 7px; font-size: .8rem; font-weight: 600;
+  text-decoration: none; cursor: pointer; border: none; font-family: inherit;
+  transition: background .15s, border-color .15s;
+}
+.tm-btn svg { width: 13px; height: 13px; }
+.tm-btn-primary {
+  background: rgba(59,130,246,.12); border: 1px solid rgba(59,130,246,.3);
+  color: var(--accent-blue);
+}
+.tm-btn-primary:hover { background: rgba(59,130,246,.22); border-color: rgba(59,130,246,.5); text-decoration: none; }
+.tm-btn-secondary {
+  background: rgba(255,255,255,.05); border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+.tm-btn-secondary:hover { background: rgba(255,255,255,.1); color: var(--text-primary); }
+.tm-btn-disabled { font-size: .8rem; color: var(--text-dim); font-style: italic; }
+
+/* ══════════════════════════════════════════════════════════════
+   WEBCAM IN MODAL
+   ══════════════════════════════════════════════════════════════ */
+.webcam-section { position: relative; }
+.webcam-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: .85rem;
+}
+.webcam-open-btn {
+  display: inline-flex; align-items: center; gap: .35rem;
+  font-size: .8rem; font-weight: 600; color: var(--accent-blue);
+  padding: .3rem .7rem; border-radius: 6px;
+  background: rgba(99,179,237,.1); border: 1px solid rgba(99,179,237,.25);
+  text-decoration: none; transition: background .15s;
+}
+.webcam-open-btn:hover { background: rgba(99,179,237,.2); text-decoration: none; }
+.webcam-open-btn svg { width: 13px; height: 13px; }
+.webcam-embed-wrap {
+  position: relative; width: 100%; height: 280px;
+  border-radius: 8px; overflow: hidden;
+  background: var(--bg-darkest); border: 1px solid var(--border);
+}
+.webcam-iframe {
+  width: 100%; height: 100%; border: none; display: block;
+  position: relative; z-index: 1;
+}
+.webcam-overlay-msg {
+  position: absolute; inset: 0; z-index: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: .6rem; color: var(--text-dim); text-align: center; padding: 1rem;
+}
+.webcam-overlay-msg svg { width: 32px; height: 32px; opacity: .4; }
+.webcam-overlay-msg p { font-size: .8rem; color: var(--text-dim); }
+.webcam-link-btn {
+  display: inline-flex; align-items: center; gap: .3rem;
+  font-size: .82rem; font-weight: 600; color: var(--accent-blue);
+  text-decoration: none; padding: .4rem .85rem;
+  background: rgba(99,179,237,.1); border: 1px solid rgba(99,179,237,.25);
+  border-radius: 7px; transition: background .15s;
+}
+.webcam-link-btn:hover { background: rgba(99,179,237,.2); text-decoration: none; }
+
+/* ── Forecast date caption ── */
+.forecast-dates-caption { font-size: .75rem; color: var(--text-dim); font-weight: 400; text-transform: none; letter-spacing: 0; }
+
+/* ── Modal trail map button ── */
+.modal-trail-map-btn {
+  display: inline-flex; align-items: center; gap: .4rem;
+  margin-top: .75rem; padding: .4rem .9rem; border-radius: 7px;
+  font-size: .82rem; font-weight: 600; color: var(--accent-teal);
+  background: rgba(45,212,191,.1); border: 1px solid rgba(45,212,191,.25);
+  text-decoration: none; transition: background .15s;
+}
+.modal-trail-map-btn:hover { background: rgba(45,212,191,.2); text-decoration: none; }
+.modal-trail-map-btn svg { width: 13px; height: 13px; }
+
+/* ══════════════════════════════════════════════════════════════
+   ADD RESORT FORM
+   ══════════════════════════════════════════════════════════════ */
+.modal-sm { max-width: 520px; }
+.add-resort-form { display: flex; flex-direction: column; gap: 1rem; }
+.form-row { display: flex; flex-direction: column; gap: .35rem; }
+.form-row.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+.form-label { font-size: .78rem; font-weight: 600; color: var(--text-secondary); }
+.form-label .req { color: var(--accent-red); }
+.form-input {
+  width: 100%; background: var(--bg-dark); border: 1px solid var(--border);
+  border-radius: 8px; padding: .5rem .75rem; color: var(--text-primary);
+  font-size: .875rem; outline: none; font-family: inherit;
+  transition: border-color .15s;
+}
+.form-input:focus { border-color: var(--brand); }
+.form-input::placeholder { color: var(--text-dim); }
+select.form-input { cursor: pointer; }
+.form-actions { display: flex; justify-content: flex-end; gap: .75rem; margin-top: .25rem; }
+.btn-cancel {
+  background: rgba(255,255,255,.05); border: 1px solid var(--border);
+  color: var(--text-secondary); border-radius: 8px;
+  padding: .5rem 1.2rem; font-size: .875rem; font-weight: 600;
+  transition: background .15s;
+}
+.btn-cancel:hover { background: rgba(255,255,255,.1); }
+.btn-save {
+  background: var(--brand); color: #fff; border: none;
+  border-radius: 8px; padding: .5rem 1.4rem; font-size: .875rem; font-weight: 600;
+  transition: background .15s;
+}
+.btn-save:hover { background: var(--brand-dark); }
+
+/* ══════════════════════════════════════════════════════════════
    RESPONSIVE
    ══════════════════════════════════════════════════════════════ */
 @media (max-width: 1280px) {
@@ -473,10 +728,15 @@ button { cursor: pointer; font-family: inherit; }
   .sidebar-section { flex: 1 1 200px; }
   .stats-bar { grid-template-columns: repeat(2, 1fr); }
   .modal-grid { grid-template-columns: 1fr; }
+  .forecast-full-chart-wrap { height: 300px; }
+  .form-row.two-col { grid-template-columns: 1fr; }
 }
 @media (max-width: 600px) {
   .header-inner { gap: .75rem; }
   .main-nav { display: none; }
-  .search-input { width: 160px; }
+  .search-input { width: 140px; }
+  .btn-add-resort span { display: none; }
   .stats-bar { grid-template-columns: 1fr 1fr; }
+  .full-view { padding: 1rem; }
+  .forecast-full-chart-wrap { height: 250px; }
 }

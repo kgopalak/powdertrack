@@ -5,9 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PowderTrack — Winter Sports Dashboard</title>
   <link rel="stylesheet" href="css/style.css" />
-  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <!-- Feather Icons -->
   <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
 </head>
 <body>
@@ -21,10 +19,10 @@
     </div>
 
     <nav class="main-nav">
-      <a href="#" class="nav-link active">Resorts</a>
-      <a href="#" class="nav-link">Forecasts</a>
-      <a href="#" class="nav-link">Reports</a>
-      <a href="#" class="nav-link">Trail Maps</a>
+      <a href="#" class="nav-link active" data-view="resorts">Resorts</a>
+      <a href="#" class="nav-link" data-view="forecasts">Forecasts</a>
+      <a href="#" class="nav-link" data-view="reports">Reports</a>
+      <a href="#" class="nav-link" data-view="trailmaps">Trail Maps</a>
     </nav>
 
     <div class="header-actions">
@@ -32,7 +30,9 @@
         <i data-feather="search" class="search-icon"></i>
         <input id="searchInput" type="text" placeholder="Search resorts or regions…" class="search-input" />
       </div>
-      <button class="btn-primary">Pro</button>
+      <button class="btn-add-resort" id="addResortBtn">
+        <i data-feather="plus"></i> Add Resort
+      </button>
     </div>
   </div>
 </header>
@@ -43,8 +43,8 @@
   <span><strong>Storm Alert:</strong> 18–28" forecast for Sierra Nevada and Wasatch Front this weekend. <a href="#">See full forecast →</a></span>
 </div>
 
-<!-- ══════════════════════ MAIN LAYOUT ══════════════════════ -->
-<main class="main-layout">
+<!-- ══════════════════════ RESORTS VIEW ══════════════════════ -->
+<main class="main-layout" id="view-resorts">
 
   <!-- ── LEFT SIDEBAR ── -->
   <aside class="sidebar">
@@ -56,6 +56,7 @@
         <button class="region-btn" data-region="wasatch">Wasatch (Utah)</button>
         <button class="region-btn" data-region="rockies">Colorado Rockies</button>
         <button class="region-btn" data-region="cascades">Cascades (PNW)</button>
+        <button class="region-btn" data-region="northeast">Northeast (US)</button>
         <button class="region-btn" data-region="alps">Alps (Europe)</button>
         <button class="region-btn" data-region="japan">Japan (Hokkaido)</button>
       </div>
@@ -88,7 +89,6 @@
       </div>
     </div>
 
-    <!-- My Favorites -->
     <div class="sidebar-section">
       <h3 class="sidebar-title">My Favorites</h3>
       <div id="favoritesList" class="favorites-list">
@@ -100,7 +100,6 @@
   <!-- ── CONTENT AREA ── -->
   <div class="content-area">
 
-    <!-- ── TOP STATS BAR ── -->
     <div class="stats-bar">
       <div class="stat-card">
         <div class="stat-icon blue"><i data-feather="cloud-snow"></i></div>
@@ -126,7 +125,7 @@
       <div class="stat-card">
         <div class="stat-icon green"><i data-feather="wind"></i></div>
         <div>
-          <div class="stat-value" id="statResorts">24</div>
+          <div class="stat-value" id="statResorts">20</div>
           <div class="stat-label">Resorts Open</div>
         </div>
       </div>
@@ -152,47 +151,169 @@
     <!-- ── RESORT GRID ── -->
     <div class="grid-header">
       <h2 class="section-title">Resort Conditions</h2>
-      <span id="resortCount" class="resort-count">Showing 12 resorts</span>
+      <span id="resortCount" class="resort-count">Showing 20 resorts</span>
     </div>
 
-    <div class="resort-grid" id="resortGrid">
-      <!-- Cards injected by JS -->
-    </div>
+    <div class="resort-grid" id="resortGrid"></div>
 
   </div>
 
   <!-- ── RIGHT PANEL ── -->
   <aside class="right-panel">
-
     <div class="panel-block">
       <h3 class="panel-block-title"><i data-feather="star"></i> Top Powder Picks</h3>
       <div id="powderPicks" class="picks-list"></div>
     </div>
-
     <div class="panel-block">
       <h3 class="panel-block-title"><i data-feather="thermometer"></i> Current Conditions</h3>
       <div id="conditionsSummary" class="conditions-summary"></div>
     </div>
-
     <div class="panel-block">
       <h3 class="panel-block-title"><i data-feather="sun"></i> Weather Outlook</h3>
       <canvas id="tempChart" height="160"></canvas>
     </div>
-
     <div class="panel-block">
       <h3 class="panel-block-title"><i data-feather="map-pin"></i> Season Snowfall</h3>
       <canvas id="seasonChart" height="160"></canvas>
     </div>
-
   </aside>
 
 </main>
+
+<!-- ══════════════════════ FORECASTS VIEW ══════════════════════ -->
+<section id="view-forecasts" class="full-view" hidden>
+  <div class="full-view-inner">
+    <div class="full-view-header">
+      <div>
+        <h2 class="full-view-title">7-Day Snowfall Forecast</h2>
+        <p class="forecast-date-range" id="forecastDateRange"></p>
+      </div>
+      <div class="fv-controls">
+        <select id="fcViewResortSelect" class="chart-select fv-resort-select"></select>
+      </div>
+    </div>
+    <div class="forecast-full-chart-wrap">
+      <canvas id="forecastChartFull"></canvas>
+    </div>
+    <div class="forecast-compare-section">
+      <h3 class="section-title" style="margin-bottom:1rem">All Resorts — 7-Day Comparison</h3>
+      <div id="forecastCompareGrid" class="forecast-compare-grid"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════ REPORTS VIEW ══════════════════════ -->
+<section id="view-reports" class="full-view" hidden>
+  <div class="full-view-inner">
+    <div class="full-view-header">
+      <h2 class="full-view-title">Snow Reports &amp; Conditions</h2>
+      <p class="full-view-subtitle" id="reportDateLabel"></p>
+    </div>
+    <div class="table-scroll-wrap">
+      <table class="reports-table">
+        <thead>
+          <tr>
+            <th class="sortable-th" data-col="name">Resort <span class="sort-arrow"></span></th>
+            <th>Region</th>
+            <th class="sortable-th" data-col="base">Base <span class="sort-arrow"></span></th>
+            <th class="sortable-th" data-col="new48h">48h New <span class="sort-arrow"></span></th>
+            <th class="sortable-th" data-col="forecast7d">7-Day <span class="sort-arrow"></span></th>
+            <th class="sortable-th" data-col="season">Season <span class="sort-arrow"></span></th>
+            <th>Surface</th>
+            <th>Visibility</th>
+            <th>Avalanche</th>
+            <th>Trails</th>
+            <th>Lifts</th>
+          </tr>
+        </thead>
+        <tbody id="reportsBody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════ TRAIL MAPS VIEW ══════════════════════ -->
+<section id="view-trailmaps" class="full-view" hidden>
+  <div class="full-view-inner">
+    <div class="full-view-header">
+      <h2 class="full-view-title">Trail Maps</h2>
+      <p class="full-view-subtitle">Browse trail maps and difficulty breakdowns for all resorts</p>
+    </div>
+    <div class="trailmap-grid" id="trailmapGrid"></div>
+  </div>
+</section>
 
 <!-- ══════════════════════ RESORT DETAIL MODAL ══════════════════════ -->
 <div id="resortModal" class="modal-overlay" hidden>
   <div class="modal">
     <button class="modal-close" id="modalClose"><i data-feather="x"></i></button>
     <div id="modalContent"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════ ADD RESORT MODAL ══════════════════════ -->
+<div id="addResortModal" class="modal-overlay" hidden>
+  <div class="modal modal-sm">
+    <button class="modal-close" id="addModalClose"><i data-feather="x"></i></button>
+    <h2 class="modal-resort-name" style="font-size:1.25rem;margin-bottom:1.25rem">Add Custom Resort</h2>
+    <form id="addResortForm" class="add-resort-form">
+      <div class="form-row">
+        <label class="form-label">Resort Name <span class="req">*</span></label>
+        <input type="text" id="ar-name" class="form-input" placeholder="e.g. Taos Ski Valley" required />
+      </div>
+      <div class="form-row two-col">
+        <div>
+          <label class="form-label">Region <span class="req">*</span></label>
+          <select id="ar-region" class="form-input" required>
+            <option value="">Select region…</option>
+            <option value="sierra">Sierra Nevada</option>
+            <option value="wasatch">Wasatch (Utah)</option>
+            <option value="rockies">Colorado Rockies</option>
+            <option value="cascades">Cascades (PNW)</option>
+            <option value="northeast">Northeast (US)</option>
+            <option value="alps">Alps (Europe)</option>
+            <option value="japan">Japan</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Country <span class="req">*</span></label>
+          <input type="text" id="ar-country" class="form-input" placeholder="USA" required />
+        </div>
+      </div>
+      <div class="form-row two-col">
+        <div>
+          <label class="form-label">State / Province</label>
+          <input type="text" id="ar-state" class="form-input" placeholder="CO" />
+        </div>
+        <div>
+          <label class="form-label">Current Base (in)</label>
+          <input type="number" id="ar-base" class="form-input" placeholder="80" min="0" max="400" />
+        </div>
+      </div>
+      <div class="form-row two-col">
+        <div>
+          <label class="form-label">48h New Snow (in)</label>
+          <input type="number" id="ar-new48h" class="form-input" placeholder="5" min="0" max="100" />
+        </div>
+        <div>
+          <label class="form-label">Temp °F</label>
+          <input type="number" id="ar-temp" class="form-input" placeholder="28" />
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Webcam / Website URL</label>
+        <input type="url" id="ar-webcam" class="form-input" placeholder="https://…" />
+      </div>
+      <div class="form-row">
+        <label class="form-label">Trail Map URL</label>
+        <input type="url" id="ar-trailmap" class="form-input" placeholder="https://…" />
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-cancel" id="addModalCancelBtn">Cancel</button>
+        <button type="submit" class="btn-save">Save Resort</button>
+      </div>
+    </form>
   </div>
 </div>
 
