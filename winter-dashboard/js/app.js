@@ -24,6 +24,7 @@ let state = {
   reportSortDir: -1,
 };
 
+let previousView = "resorts";
 let forecastChart = null;
 let forecastChartFull = null;
 let tempChartInst = null;
@@ -74,6 +75,12 @@ function setupControls() {
     });
   });
 
+  // Alert banner "See full forecast" link
+  document.getElementById("alertForecastLink").addEventListener("click", (e) => {
+    e.preventDefault();
+    switchView("forecasts");
+  });
+
   // Region buttons
   document.getElementById("regionList").addEventListener("click", (e) => {
     const btn = e.target.closest(".region-btn");
@@ -120,10 +127,9 @@ function setupControls() {
     if (resort) renderForecastChartFull(resort);
   });
 
-  // Resort modal close
-  document.getElementById("modalClose").addEventListener("click", closeModal);
-  document.getElementById("resortModal").addEventListener("click", (e) => {
-    if (e.target === document.getElementById("resortModal")) closeModal();
+  // Back button (resort detail view)
+  document.getElementById("backBtn").addEventListener("click", () => {
+    switchView(previousView === "resort-detail" ? "resorts" : previousView);
   });
 
   // Add Resort button
@@ -155,6 +161,7 @@ function setupControls() {
 
 // ── View Switching ─────────────────────────────────────────
 function switchView(view) {
+  previousView = state.view;
   state.view = view;
 
   document.querySelectorAll(".main-layout, .full-view").forEach(el => { el.hidden = true; });
@@ -164,9 +171,11 @@ function switchView(view) {
     l.classList.toggle("active", l.dataset.view === view);
   });
 
-  if (view === "forecasts")  renderForecastsView();
-  if (view === "reports")    renderReportsView();
-  if (view === "trailmaps")  renderTrailMapsView();
+  if (view === "forecasts")     renderForecastsView();
+  if (view === "reports")       renderReportsView();
+  if (view === "trailmaps")     renderTrailMapsView();
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function setUnit(unit) {
@@ -202,6 +211,18 @@ const REGION_LABELS = {
   cascades: "Cascades", northeast: "Northeast", alps: "Alps", japan: "Japan", other: "Other",
 };
 
+// Region gradient colors for trail map thumbnails
+const REGION_GRADIENTS = {
+  sierra:    ["#1a3a5c", "#2d6a9f"],
+  wasatch:   ["#1a3d2e", "#2d8a5a"],
+  rockies:   ["#2d1a4a", "#6a2d9f"],
+  cascades:  ["#1a3340", "#2d7a8a"],
+  northeast: ["#3a1a1a", "#8a2d2d"],
+  alps:      ["#1a2a3a", "#2d5a9f"],
+  japan:     ["#3a1a2a", "#9f2d6a"],
+  other:     ["#2a2a2a", "#5a5a5a"],
+};
+
 // ── Filter & Sort ──────────────────────────────────────────
 function filteredResorts() {
   let list = RESORTS.filter(r => {
@@ -233,7 +254,9 @@ function renderResorts() {
 
   grid.innerHTML = list.map(r => {
     const isFav = state.favorites.includes(r.id);
-    const stars = "★".repeat(Math.round(r.rating)) + "☆".repeat(5 - Math.round(r.rating));
+    const stars = r.rating > 0
+      ? "★".repeat(Math.round(r.rating)) + "☆".repeat(5 - Math.round(r.rating))
+      : "—";
     const danger = avalancheBadge(r.avalanche_danger);
     const surface = surfaceBadge(r.surface);
     const forecast7 = r.forecast.reduce((s, d) => s + d.snow, 0);
@@ -327,7 +350,7 @@ function renderResorts() {
   });
 
   grid.querySelectorAll(".card-detail-btn").forEach(btn => {
-    btn.addEventListener("click", () => openModal(+btn.dataset.id));
+    btn.addEventListener("click", () => openResortDetail(+btn.dataset.id));
   });
 }
 
@@ -364,18 +387,22 @@ function renderFavorites() {
   el.innerHTML = state.favorites.map(id => {
     const r = RESORTS.find(x => x.id === id);
     if (!r) return "";
-    return `<div class="fav-item">
+    return `<div class="fav-item" style="cursor:pointer" data-id="${r.id}">
       <span class="fav-name">${r.name}</span>
       <span class="fav-snow">${snow(r.new48h_in)} new</span>
     </div>`;
   }).join("");
+
+  el.querySelectorAll(".fav-item[data-id]").forEach(item => {
+    item.addEventListener("click", () => openResortDetail(+item.dataset.id));
+  });
 }
 
 // ── Side Panels ────────────────────────────────────────────
 function renderSidePanels() {
   const picks = [...RESORTS].sort((a, b) => b.new48h_in - a.new48h_in).slice(0, 4);
   document.getElementById("powderPicks").innerHTML = picks.map((r, i) => `
-    <div class="pick-item">
+    <div class="pick-item" style="cursor:pointer" data-id="${r.id}">
       <span class="pick-rank">#${i + 1}</span>
       <div class="pick-info">
         <span class="pick-name">${r.name}</span>
@@ -384,6 +411,10 @@ function renderSidePanels() {
       <span class="pick-snow">${snow(r.new48h_in)}</span>
     </div>
   `).join("");
+
+  document.querySelectorAll(".pick-item[data-id]").forEach(item => {
+    item.addEventListener("click", () => openResortDetail(+item.dataset.id));
+  });
 
   const open = RESORTS.filter(r => r.status === "open");
   document.getElementById("conditionsSummary").innerHTML = `
@@ -440,11 +471,8 @@ function renderForecastChart(resort) {
   const labels   = forecastDates(7);
   const snowData = resort.forecast.map(d => d.snow);
   const tempData = resort.forecast.map(d => state.unit === "metric"
-    ? Math.round((d.high - 32) * 5 / 9)
-    : d.high);
-  const tempLabel = state.unit === "metric" ? "High Temp (°C)" : "High Temp (°F)";
+    ? Math.round((d.high - 32) * 5 / 9) : d.high);
   const tempSuffix = state.unit === "metric" ? "°C" : "°F";
-  const snowLabel = state.unit === "metric" ? "Snowfall (cm)" : "Snowfall (in)";
   const snowSuffix = state.unit === "metric" ? " cm" : '"';
 
   forecastChart = new Chart(ctx, {
@@ -453,7 +481,7 @@ function renderForecastChart(resort) {
       datasets: [
         {
           type: "bar",
-          label: snowLabel,
+          label: "Snowfall",
           data: state.unit === "metric" ? snowData.map(v => Math.round(v * 2.54)) : snowData,
           backgroundColor: "rgba(99,179,237,0.7)",
           borderColor: "rgba(99,179,237,1)",
@@ -463,7 +491,7 @@ function renderForecastChart(resort) {
         },
         {
           type: "line",
-          label: tempLabel,
+          label: "High Temp",
           data: tempData,
           borderColor: "#f97316",
           backgroundColor: "rgba(249,115,22,0.1)",
@@ -488,8 +516,7 @@ function renderForecastChart(resort) {
           borderWidth: 1,
           callbacks: {
             label: (ctx) => {
-              if (ctx.dataset.label.includes("Snow") || ctx.dataset.label.includes("Snowfall"))
-                return ` ${ctx.raw}${snowSuffix} snowfall`;
+              if (ctx.dataset.label === "Snowfall") return ` ${ctx.raw}${snowSuffix} snowfall`;
               return ` ${ctx.raw}${tempSuffix} high`;
             }
           }
@@ -500,13 +527,13 @@ function renderForecastChart(resort) {
           position: "left",
           grid: { color: "rgba(255,255,255,0.06)" },
           ticks: { color: "#94a3b8", callback: v => v + snowSuffix },
-          title: { display: true, text: snowLabel, color: "#63b3ed" },
+          title: { display: true, text: `Snowfall (${state.unit === "metric" ? "cm" : "in"})`, color: "#63b3ed" },
         },
         yTemp: {
           position: "right",
           grid: { drawOnChartArea: false },
           ticks: { color: "#f97316", callback: v => v + tempSuffix },
-          title: { display: true, text: tempLabel, color: "#f97316" },
+          title: { display: true, text: `Temp (${tempSuffix})`, color: "#f97316" },
         },
         x: {
           grid: { color: "rgba(255,255,255,0.06)" },
@@ -636,7 +663,7 @@ function renderForecastCompare() {
     }).join("");
 
     return `
-    <div class="compare-resort-card">
+    <div class="compare-resort-card" style="cursor:pointer" data-id="${r.id}">
       <div class="compare-header">
         <div>
           <div class="compare-name">${r.name}</div>
@@ -648,6 +675,10 @@ function renderForecastCompare() {
     </div>
     `;
   }).join("");
+
+  grid.querySelectorAll(".compare-resort-card[data-id]").forEach(card => {
+    card.addEventListener("click", () => openResortDetail(+card.dataset.id));
+  });
 }
 
 // ── Reports View ───────────────────────────────────────────
@@ -656,11 +687,11 @@ function renderReportsView() {
   document.getElementById("reportDateLabel").textContent = `Conditions as of ${now}`;
 
   const colMap = {
-    name:      r => r.name,
-    base:      r => r.base_in,
-    new48h:    r => r.new48h_in,
+    name:       r => r.name,
+    base:       r => r.base_in,
+    new48h:     r => r.new48h_in,
     forecast7d: r => r.forecast7d_in,
-    season:    r => r.season_total_in,
+    season:     r => r.season_total_in,
   };
 
   const sorted = [...RESORTS].sort((a, b) => {
@@ -672,7 +703,6 @@ function renderReportsView() {
       : (vb - va) * state.reportSortDir * -1;
   });
 
-  // Update sort arrows
   document.querySelectorAll(".sortable-th").forEach(th => {
     const arrow = th.querySelector(".sort-arrow");
     if (th.dataset.col === state.reportSortCol) {
@@ -710,10 +740,7 @@ function renderReportsView() {
   }).join("");
 
   document.querySelectorAll(".report-row").forEach(row => {
-    row.addEventListener("click", () => {
-      switchView("resorts");
-      setTimeout(() => openModal(+row.dataset.id), 50);
-    });
+    row.addEventListener("click", () => openResortDetail(+row.dataset.id));
   });
 }
 
@@ -721,44 +748,76 @@ function renderReportsView() {
 function renderTrailMapsView() {
   const grid = document.getElementById("trailmapGrid");
   grid.innerHTML = RESORTS.map(r => {
-    const total = r.forecast.reduce((s, d) => s + d.snow, 0);
+    const [gradFrom, gradTo] = REGION_GRADIENTS[r.region] || REGION_GRADIENTS.other;
+    const pdfUrl = r.trail_map_pdf_url;
+    const pageUrl = r.trail_map_url;
+
+    const thumbTarget = pdfUrl || pageUrl;
+    const thumbLabel  = pdfUrl ? "PDF" : "Web";
+    const thumbIcon   = pdfUrl ? "file-text" : "external-link";
+
     return `
     <div class="trailmap-card">
-      <div class="tm-header">
-        <div class="tm-name">${r.name}</div>
-        <div class="tm-loc">${r.state ? r.state + ', ' : ''}${r.country}</div>
-      </div>
-
-      <div class="tm-terrain">
-        <div class="terrain-bar" style="height:12px;border-radius:6px">
-          <div class="seg beginner" style="width:${r.terrain.beginner}%"></div>
-          <div class="seg intermediate" style="width:${r.terrain.intermediate}%"></div>
-          <div class="seg advanced" style="width:${r.terrain.advanced}%"></div>
+      <a class="tm-thumb"
+         href="${thumbTarget}"
+         target="_blank" rel="noopener"
+         style="background: linear-gradient(145deg, ${gradFrom}, ${gradTo})">
+        <div class="tm-thumb-content">
+          <div class="tm-thumb-name">${r.name}</div>
+          <div class="tm-thumb-loc">${r.state ? r.state + ' · ' : ''}${r.country}</div>
+          <div class="tm-thumb-badge">
+            <i data-feather="${thumbIcon}"></i> Open ${thumbLabel}
+          </div>
         </div>
-        <div class="tm-terrain-labels">
-          <span class="tm-beg">&#9679; ${r.terrain.beginner}% Beg</span>
-          <span class="tm-int">&#9679; ${r.terrain.intermediate}% Int</span>
-          <span class="tm-adv">&#9679; ${r.terrain.advanced}% Adv</span>
+        <div class="tm-thumb-terrain">
+          <div class="tm-mini-bar">
+            <div class="seg beginner"  style="width:${r.terrain.beginner}%"></div>
+            <div class="seg intermediate" style="width:${r.terrain.intermediate}%"></div>
+            <div class="seg advanced"  style="width:${r.terrain.advanced}%"></div>
+          </div>
+          <div class="tm-mini-labels">
+            <span class="tm-beg">${r.terrain.beginner}% Beg</span>
+            <span class="tm-int">${r.terrain.intermediate}% Int</span>
+            <span class="tm-adv">${r.terrain.advanced}% Adv</span>
+          </div>
         </div>
-      </div>
+      </a>
 
-      <div class="tm-stats">
-        <div class="tm-stat"><strong>${r.open_trails}</strong><span>Trails Open</span></div>
-        <div class="tm-stat"><strong>${r.total_trails}</strong><span>Total Trails</span></div>
-        <div class="tm-stat"><strong>${r.lifts_open}</strong><span>Lifts Open</span></div>
-        <div class="tm-stat"><strong>${snow(r.base_in)}</strong><span>Base</span></div>
-      </div>
+      <div class="tm-card-body">
+        <div class="tm-stats">
+          <div class="tm-stat">
+            <strong>${r.open_trails}<span class="tm-stat-total">/${r.total_trails}</span></strong>
+            <span>Trails</span>
+          </div>
+          <div class="tm-stat">
+            <strong>${r.lifts_open}<span class="tm-stat-total">/${r.lifts_total}</span></strong>
+            <span>Lifts</span>
+          </div>
+          <div class="tm-stat">
+            <strong>${snow(r.base_in)}</strong>
+            <span>Base</span>
+          </div>
+          <div class="tm-stat">
+            <strong>${snow(r.new48h_in)}</strong>
+            <span>48h New</span>
+          </div>
+        </div>
 
-      <div class="tm-actions">
-        ${r.trail_map_url
-          ? `<a href="${r.trail_map_url}" target="_blank" rel="noopener" class="tm-btn tm-btn-primary">
-               <i data-feather="map"></i> View Trail Map
-             </a>`
-          : `<span class="tm-btn-disabled">No trail map available</span>`
-        }
-        <button class="tm-btn tm-btn-secondary" data-id="${r.id}">
-          <i data-feather="info"></i> Conditions
-        </button>
+        <div class="tm-actions">
+          ${pdfUrl
+            ? `<a href="${pdfUrl}" target="_blank" rel="noopener" class="tm-btn tm-btn-primary">
+                 <i data-feather="file-text"></i> Open Trail Map PDF
+               </a>`
+            : pageUrl
+              ? `<a href="${pageUrl}" target="_blank" rel="noopener" class="tm-btn tm-btn-primary">
+                   <i data-feather="external-link"></i> View Trail Map
+                 </a>`
+              : `<span class="tm-btn-disabled">No trail map available</span>`
+          }
+          <button class="tm-btn tm-btn-secondary" data-id="${r.id}">
+            <i data-feather="bar-chart-2"></i> Conditions
+          </button>
+        </div>
       </div>
     </div>
     `;
@@ -767,10 +826,7 @@ function renderTrailMapsView() {
   feather.replace();
 
   grid.querySelectorAll(".tm-btn-secondary[data-id]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      switchView("resorts");
-      setTimeout(() => openModal(+btn.dataset.id), 50);
-    });
+    btn.addEventListener("click", () => openResortDetail(+btn.dataset.id));
   });
 }
 
@@ -857,15 +913,20 @@ function renderSeasonChart() {
   });
 }
 
-// ── Modal ──────────────────────────────────────────────────
-function openModal(id) {
+// ── Resort Detail (full-page) ──────────────────────────────
+function openResortDetail(id) {
+  previousView = state.view;
+  switchView("resort-detail");
+  renderResortDetail(id);
+}
+
+function renderResortDetail(id) {
   const r = RESORTS.find(x => x.id === id);
   if (!r) return;
-  const modal = document.getElementById("resortModal");
-  const content = document.getElementById("modalContent");
 
   const dates = forecastDates(7);
   const forecast7 = r.forecast.reduce((s, d) => s + d.snow, 0);
+
   const forecastRows = r.forecast.map((d, i) => `
     <tr>
       <td>${dates[i]}</td>
@@ -876,9 +937,9 @@ function openModal(id) {
   `).join("");
 
   const webcamSection = r.webcam_url ? `
-    <div class="modal-section modal-section-full webcam-section">
+    <div class="detail-section webcam-section">
       <div class="webcam-header">
-        <h4>Live Webcam</h4>
+        <h3 class="detail-section-title">Live Webcam</h3>
         <a href="${r.webcam_url}" target="_blank" rel="noopener" class="webcam-open-btn">
           <i data-feather="external-link"></i> Open in New Tab
         </a>
@@ -902,50 +963,77 @@ function openModal(id) {
     </div>
   ` : '';
 
-  const trailMapBtn = r.trail_map_url
-    ? `<a href="${r.trail_map_url}" target="_blank" rel="noopener" class="modal-trail-map-btn">
-         <i data-feather="map"></i> View Trail Map
+  const trailMapBtn = r.trail_map_pdf_url
+    ? `<a href="${r.trail_map_pdf_url}" target="_blank" rel="noopener" class="modal-trail-map-btn">
+         <i data-feather="file-text"></i> Open Trail Map PDF
        </a>`
-    : '';
+    : r.trail_map_url
+      ? `<a href="${r.trail_map_url}" target="_blank" rel="noopener" class="modal-trail-map-btn">
+           <i data-feather="map"></i> View Trail Map
+         </a>`
+      : '';
 
-  content.innerHTML = `
-    <div class="modal-hero">
-      <h2 class="modal-resort-name">${r.name}</h2>
-      <p class="modal-location">${r.state ? r.state + " · " : ""}${r.country} · ${elevation(r.elevation.base)} – ${elevation(r.elevation.summit)}</p>
-      <div class="modal-badges">
-        ${avalancheBadge(r.avalanche_danger)}
-        ${surfaceBadge(r.surface)}
-        ${r.groomed_today ? '<span class="badge groomed">Groomed Today</span>' : ''}
-        ${r.custom ? '<span class="badge badge-custom">Custom Resort</span>' : ''}
+  document.getElementById("resortDetailContent").innerHTML = `
+    <div class="detail-hero">
+      <div class="detail-hero-main">
+        <h1 class="detail-resort-name">${r.name}</h1>
+        <p class="detail-location">${r.state ? r.state + " · " : ""}${r.country}
+          ${r.elevation.summit ? ` · ${elevation(r.elevation.base)} – ${elevation(r.elevation.summit)}` : ''}
+        </p>
+        <div class="modal-badges" style="margin-top:.5rem">
+          ${avalancheBadge(r.avalanche_danger)}
+          ${surfaceBadge(r.surface)}
+          ${r.groomed_today ? '<span class="badge groomed">Groomed Today</span>' : ''}
+          ${r.custom ? '<span class="badge badge-custom">Custom Resort</span>' : ''}
+        </div>
       </div>
-      ${trailMapBtn}
+      <div class="detail-hero-actions">
+        ${trailMapBtn}
+        <button class="fav-btn-detail ${state.favorites.includes(r.id) ? 'active' : ''}" data-id="${r.id}">
+          ${state.favorites.includes(r.id) ? '★ Saved' : '☆ Save to Favorites'}
+        </button>
+      </div>
     </div>
 
-    <div class="modal-grid">
-      <div class="modal-section">
-        <h4>Snow Report</h4>
-        <div class="modal-stats">
-          <div class="modal-stat"><div class="ms-val">${snow(r.new48h_in)}</div><div class="ms-lbl">New (48h)</div></div>
-          <div class="modal-stat"><div class="ms-val accent">${snow(r.base_in)}</div><div class="ms-lbl">Base</div></div>
-          <div class="modal-stat"><div class="ms-val green">${snow(forecast7)}</div><div class="ms-lbl">7-Day Fcst</div></div>
-          <div class="modal-stat"><div class="ms-val yellow">${snow(r.season_total_in)}</div><div class="ms-lbl">Season Total</div></div>
+    <div class="detail-grid">
+      <div class="detail-section">
+        <h3 class="detail-section-title">Snow Report</h3>
+        <div class="detail-snow-stats">
+          <div class="detail-snow-stat">
+            <div class="detail-snow-val">${snow(r.new48h_in)}</div>
+            <div class="detail-snow-lbl">New (48h)</div>
+          </div>
+          <div class="detail-snow-stat">
+            <div class="detail-snow-val accent">${snow(r.base_in)}</div>
+            <div class="detail-snow-lbl">Base Depth</div>
+          </div>
+          <div class="detail-snow-stat">
+            <div class="detail-snow-val green">${snow(forecast7)}</div>
+            <div class="detail-snow-lbl">7-Day Forecast</div>
+          </div>
+          <div class="detail-snow-stat">
+            <div class="detail-snow-val yellow">${snow(r.season_total_in)}</div>
+            <div class="detail-snow-lbl">Season Total</div>
+          </div>
         </div>
       </div>
 
-      <div class="modal-section">
-        <h4>Current Conditions</h4>
+      <div class="detail-section">
+        <h3 class="detail-section-title">Current Conditions</h3>
         <div class="modal-cond-list">
           <div class="mc-item"><span>Temperature</span><strong>${temp(r.temp_f)}</strong></div>
           <div class="mc-item"><span>Wind Speed</span><strong>${wind(r.wind_mph)}</strong></div>
           <div class="mc-item"><span>Visibility</span><strong>${r.visibility}</strong></div>
           <div class="mc-item"><span>Surface</span><strong>${r.surface}</strong></div>
+          <div class="mc-item"><span>Trails Open</span><strong>${r.open_trails} / ${r.total_trails}</strong></div>
+          <div class="mc-item"><span>Lifts Open</span><strong>${r.lifts_open} / ${r.lifts_total}</strong></div>
           <div class="mc-item"><span>Last Updated</span><strong>${r.last_updated}</strong></div>
         </div>
       </div>
 
-      <div class="modal-section">
-        <h4>Terrain Breakdown</h4>
-        <div class="terrain-bar" style="height:14px;border-radius:7px;overflow:hidden;margin-bottom:.5rem">
+      <div class="detail-section">
+        <h3 class="detail-section-title">Terrain Breakdown</h3>
+        <div class="terrain-bar" style="height:16px;border-radius:8px;overflow:hidden;margin-bottom:.6rem">
           <div class="seg beginner" style="width:${r.terrain.beginner}%"></div>
           <div class="seg intermediate" style="width:${r.terrain.intermediate}%"></div>
           <div class="seg advanced" style="width:${r.terrain.advanced}%"></div>
@@ -955,12 +1043,13 @@ function openModal(id) {
           <span class="int">&#9679; Intermediate ${r.terrain.intermediate}%</span>
           <span class="adv">&#9679; Expert ${r.terrain.advanced}%</span>
         </div>
-        <div class="mc-item mt8"><span>Trails Open</span><strong>${r.open_trails} / ${r.total_trails}</strong></div>
-        <div class="mc-item"><span>Lifts Open</span><strong>${r.lifts_open} / ${r.lifts_total}</strong></div>
       </div>
 
-      <div class="modal-section modal-section-full">
-        <h4>7-Day Forecast — <span class="forecast-dates-caption">${forecastDateRangeStr()}</span></h4>
+      <div class="detail-section detail-section-full">
+        <h3 class="detail-section-title">
+          7-Day Forecast
+          <span class="forecast-dates-caption">${forecastDateRangeStr()}</span>
+        </h3>
         <table class="forecast-table">
           <thead><tr><th>Date</th><th>Snow</th><th>High</th><th>Low</th></tr></thead>
           <tbody>${forecastRows}</tbody>
@@ -971,12 +1060,13 @@ function openModal(id) {
     </div>
   `;
 
-  modal.hidden = false;
   feather.replace();
-}
 
-function closeModal() {
-  document.getElementById("resortModal").hidden = true;
+  document.querySelector(".fav-btn-detail")?.addEventListener("click", (e) => {
+    toggleFavorite(+e.currentTarget.dataset.id);
+    e.currentTarget.textContent = state.favorites.includes(r.id) ? '★ Saved' : '☆ Save to Favorites';
+    e.currentTarget.classList.toggle("active", state.favorites.includes(r.id));
+  });
 }
 
 // ── Add Resort Modal ───────────────────────────────────────
@@ -991,54 +1081,37 @@ function closeAddResortModal() {
 }
 
 function saveCustomResort() {
-  const name   = document.getElementById("ar-name").value.trim();
-  const region = document.getElementById("ar-region").value;
+  const name    = document.getElementById("ar-name").value.trim();
+  const region  = document.getElementById("ar-region").value;
   const country = document.getElementById("ar-country").value.trim();
-  const state_ = document.getElementById("ar-state").value.trim();
-  const base   = parseInt(document.getElementById("ar-base").value) || 0;
-  const new48h = parseInt(document.getElementById("ar-new48h").value) || 0;
-  const tempF  = parseInt(document.getElementById("ar-temp").value) || 28;
-  const webcam = document.getElementById("ar-webcam").value.trim();
+  const state_  = document.getElementById("ar-state").value.trim();
+  const base    = parseInt(document.getElementById("ar-base").value) || 0;
+  const new48h  = parseInt(document.getElementById("ar-new48h").value) || 0;
+  const tempF   = parseInt(document.getElementById("ar-temp").value) || 28;
+  const webcam  = document.getElementById("ar-webcam").value.trim();
   const trailmap = document.getElementById("ar-trailmap").value.trim();
 
   if (!name || !region || !country) return;
 
   const newId = Math.max(...RESORTS.map(r => r.id)) + 1;
-  const forecast7d = Math.round(new48h * 2.5);
 
   const resort = {
-    id: newId,
-    name,
-    region,
-    country,
-    state: state_,
+    id: newId, name, region, country, state: state_,
     elevation: { base: 0, summit: 0 },
-    base_in: base,
-    new48h_in: new48h,
-    forecast7d_in: forecast7d,
-    open_trails: 0,
-    total_trails: 0,
-    lifts_open: 0,
-    lifts_total: 0,
-    rating: 0,
-    surface: "Unknown",
-    wind_mph: 0,
-    temp_f: tempF,
-    visibility: "Unknown",
-    groomed_today: false,
-    status: "open",
+    base_in: base, new48h_in: new48h,
+    forecast7d_in: Math.round(new48h * 2.5),
+    open_trails: 0, total_trails: 0, lifts_open: 0, lifts_total: 0,
+    rating: 0, surface: "Unknown", wind_mph: 0, temp_f: tempF,
+    visibility: "Unknown", groomed_today: false, status: "open",
     terrain: { beginner: 33, intermediate: 34, advanced: 33 },
     forecast: Array.from({ length: 7 }, (_, i) => ({
-      snow: i < 2 ? new48h : Math.max(0, new48h - i),
-      high: tempF + i * 2,
-      low: tempF - 10,
+      snow: Math.max(0, new48h - i * 2), high: tempF + i * 2, low: tempF - 10,
     })),
-    season_total_in: 0,
-    avalanche_danger: "Unknown",
+    season_total_in: 0, avalanche_danger: "Unknown",
     last_updated: new Date().toISOString().slice(0, 16).replace("T", " "),
     lat: 0, lon: 0,
-    webcam_url: webcam,
-    trail_map_url: trailmap,
+    webcam_url: webcam, trail_map_url: trailmap,
+    trail_map_pdf_url: trailmap.toLowerCase().endsWith(".pdf") ? trailmap : "",
     custom: true,
   };
 

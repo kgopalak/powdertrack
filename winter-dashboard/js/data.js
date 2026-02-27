@@ -40,6 +40,7 @@ const RESORTS = [
     lat: 37.631, lon: -119.032,
     webcam_url: "https://www.mammothmountain.com/on-the-mountain/mountain-report/webcams",
     trail_map_url: "https://www.mammothmountain.com/on-the-mountain/trail-maps",
+    trail_map_pdf_url: "https://images.ski.com/docs/trail-maps/mammoth_trail-map.pdf",
   },
   {
     id: 2,
@@ -78,6 +79,7 @@ const RESORTS = [
     lat: 40.651, lon: -111.508,
     webcam_url: "https://www.parkcitymountain.com/explore-the-resort/mountain-conditions/web-cams.aspx",
     trail_map_url: "https://www.parkcitymountain.com/explore-the-resort/trail-map.aspx",
+    trail_map_pdf_url: "https://www.parkcitymountain.com/-/aemasset/sitecore/park-city/maps/20251114_PC_winter-trail_map_001.pdf",
   },
   {
     id: 3,
@@ -116,6 +118,7 @@ const RESORTS = [
     lat: 39.608, lon: -106.355,
     webcam_url: "https://www.vail.com/the-mountain/mountain-conditions/web-cams.aspx",
     trail_map_url: "https://www.vail.com/the-mountain/trail-maps.aspx",
+    trail_map_pdf_url: "https://images.ski.com/docs/trail-maps/vail-frontside_trail-map.pdf",
   },
   {
     id: 4,
@@ -154,6 +157,7 @@ const RESORTS = [
     lat: 50.116, lon: -122.948,
     webcam_url: "https://www.whistlerblackcomb.com/the-mountain/mountain-conditions/mountain-cams.aspx",
     trail_map_url: "https://www.whistlerblackcomb.com/the-mountain/about-the-mountain/trail-map.aspx",
+    trail_map_pdf_url: "https://www.whistlerblackcomb.com/-/aemasset/sitecore/whistler-blackcomb/maps/winter-2024-2025/20241115_WB_winter-trail_map_001.pdf",
   },
   {
     id: 5,
@@ -192,6 +196,7 @@ const RESORTS = [
     lat: 37.937, lon: -107.852,
     webcam_url: "https://www.telluride.com/mountain/mountain-report/webcams",
     trail_map_url: "https://www.telluride.com/mountain/trail-map",
+    trail_map_pdf_url: "https://images.ski.com/docs/trail-maps/telluride_trail-map.pdf",
   },
   {
     id: 6,
@@ -230,6 +235,7 @@ const RESORTS = [
     lat: 45.923, lon: 6.869,
     webcam_url: "https://www.chamonix.com/webcams,en,pg39.html",
     trail_map_url: "https://www.chamonix.com/skiing/ski-area-map,en,pg34.html",
+    trail_map_pdf_url: "",
   },
   {
     id: 7,
@@ -268,6 +274,7 @@ const RESORTS = [
     lat: 42.797, lon: 140.688,
     webcam_url: "https://www.niseko.ne.jp/en/webcam/",
     trail_map_url: "https://www.niseko.ne.jp/en/ski-area/",
+    trail_map_pdf_url: "https://www.niseko.ne.jp/en/wp-content/uploads/2020/08/2025-2026_WEBMAP_EG.pdf",
   },
   {
     id: 8,
@@ -306,6 +313,7 @@ const RESORTS = [
     lat: 40.583, lon: -111.656,
     webcam_url: "https://www.snowbird.com/mountain-report/",
     trail_map_url: "https://www.snowbird.com/mountain-report/trail-map/",
+    trail_map_pdf_url: "https://www.altalodge.com/wp-content/uploads/2023/08/snowbird_wintertrailmap_web-1.pdf",
   },
   {
     id: 9,
@@ -344,6 +352,7 @@ const RESORTS = [
     lat: 48.858, lon: -121.679,
     webcam_url: "https://www.mtbaker.us/mountain-conditions/webcams/",
     trail_map_url: "https://www.mtbaker.us/the-mountain/trail-map/",
+    trail_map_pdf_url: "https://www.mtbaker.us/wp-content/uploads/2024/11/Trail-Map-for-Website_24-25.pdf",
   },
   {
     id: 10,
@@ -382,6 +391,7 @@ const RESORTS = [
     lat: 43.588, lon: -110.828,
     webcam_url: "https://www.jacksonhole.com/web-cams.html",
     trail_map_url: "https://www.jacksonhole.com/trail-map.html",
+    trail_map_pdf_url: "https://images.ski.com/docs/trail-maps/jacksonhole_trail-map.pdf",
   },
   {
     id: 11,
@@ -420,6 +430,7 @@ const RESORTS = [
     lat: 39.196, lon: -120.236,
     webcam_url: "https://www.palisadestahoe.com/mountain-info/mountain-conditions/webcams",
     trail_map_url: "https://www.palisadestahoe.com/mountain-info/trail-map",
+    trail_map_pdf_url: "https://www.palisadestahoe.com/-/media/palisades-tahoe/pdfs/trail-maps/palisadesmaintrailmap.pdf",
   },
   {
     id: 12,
@@ -458,6 +469,7 @@ const RESORTS = [
     lat: 46.016, lon: 7.749,
     webcam_url: "https://www.zermatt.ch/en/Media/Webcams",
     trail_map_url: "https://www.zermatt.ch/en/Media/Maps/Piste-map",
+    trail_map_pdf_url: "https://www.allchalets.com/system/cms/files/38/files/original/zermatt-piste-map.pdf",
   },
   {
     id: 13,
@@ -496,6 +508,7 @@ const RESORTS = [
     lat: 39.208, lon: -106.946,
     webcam_url: "https://www.aspensnowmass.com/our-mountains/mountain-conditions/mountain-cams",
     trail_map_url: "https://www.aspensnowmass.com/our-mountains/trail-maps",
+    trail_map_pdf_url: "https://images.ski.com/docs/trail-maps/snowmass_trail-map.pdf",
   },
   {
     id: 14,
@@ -534,6 +547,7 @@ const RESORTS = [
     lat: 39.481, lon: -106.066,
     webcam_url: "https://www.breckenridge.com/the-mountain/mountain-conditions/web-cams.aspx",
     trail_map_url: "https://www.breckenridge.com/the-mountain/trail-maps.aspx",
+    trail_map_pdf_url: "https://www.breckenridge.com/-/aemasset/sitecore/breckenridge/maps/20231031_BR_winter-trail_map_001.pdf",
   },
   {
     id: 15,
@@ -572,6 +586,7 @@ const RESORTS = [
     lat: 44.530, lon: -72.782,
     webcam_url: "https://www.stowe.com/the-mountain/mountain-conditions/webcams.aspx",
     trail_map_url: "https://www.stowe.com/the-mountain/trail-maps.aspx",
+    trail_map_pdf_url: "https://www.stowe.com/-/aemasset/sitecore/stowe/maps/winter-2025-2026/20251014_ST_winter-trail_map_001.pdf",
   },
   {
     id: 16,
@@ -610,6 +625,7 @@ const RESORTS = [
     lat: 43.623, lon: -72.820,
     webcam_url: "https://www.killington.com/the-mountain/mountain-conditions/web-cams.aspx",
     trail_map_url: "https://www.killington.com/the-mountain/trail-maps.aspx",
+    trail_map_pdf_url: "https://images.ski.com/docs/trail-maps/killington_trail-map.pdf",
   },
   {
     id: 17,
@@ -648,6 +664,7 @@ const RESORTS = [
     lat: 45.448, lon: 6.977,
     webcam_url: "https://www.valdisere.com/en/webcams/",
     trail_map_url: "https://www.valdisere.com/en/ski-area/",
+    trail_map_pdf_url: "",
   },
   {
     id: 18,
@@ -686,6 +703,7 @@ const RESORTS = [
     lat: 46.096, lon: 7.229,
     webcam_url: "https://www.verbier.ch/en/webcams/",
     trail_map_url: "https://www.verbier.ch/en/ski-area/piste-map/",
+    trail_map_pdf_url: "",
   },
   {
     id: 19,
@@ -724,6 +742,7 @@ const RESORTS = [
     lat: 46.540, lon: 12.135,
     webcam_url: "https://www.dolomiti.org/en/cortina/webcam/",
     trail_map_url: "https://www.cortina.dolomiti.org/en/ski-area/",
+    trail_map_pdf_url: "",
   },
   {
     id: 20,
@@ -762,6 +781,7 @@ const RESORTS = [
     lat: 43.696, lon: -114.351,
     webcam_url: "https://www.sunvalley.com/discover/webcams/",
     trail_map_url: "https://www.sunvalley.com/mountain/trail-map/",
+    trail_map_pdf_url: "https://scoutski.com/assets/uploads/image/article/587/Sun%20Valley%20Ski%20Resort%20Trail%20Map_1.pdf",
   },
 ];
 

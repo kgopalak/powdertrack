@@ -40,7 +40,7 @@
 <!-- ══════════════════════ HERO / ALERT BANNER ══════════════════════ -->
 <div class="alert-banner">
   <i data-feather="alert-circle"></i>
-  <span><strong>Storm Alert:</strong> 18–28" forecast for Sierra Nevada and Wasatch Front this weekend. <a href="#">See full forecast →</a></span>
+  <span><strong>Storm Alert:</strong> 18–28" forecast for Sierra Nevada and Wasatch Front this weekend. <a href="#" id="alertForecastLink">See full forecast →</a></span>
 </div>
 
 <!-- ══════════════════════ RESORTS VIEW ══════════════════════ -->
@@ -156,27 +156,27 @@
 
     <div class="resort-grid" id="resortGrid"></div>
 
-  </div>
+    <!-- ── OVERVIEW SECTION (moved from right panel) ── -->
+    <div class="overview-section">
+      <div class="panel-block">
+        <h3 class="panel-block-title"><i data-feather="star"></i> Top Powder Picks</h3>
+        <div id="powderPicks" class="picks-list"></div>
+      </div>
+      <div class="panel-block">
+        <h3 class="panel-block-title"><i data-feather="thermometer"></i> Current Conditions</h3>
+        <div id="conditionsSummary" class="conditions-summary"></div>
+      </div>
+      <div class="panel-block">
+        <h3 class="panel-block-title"><i data-feather="sun"></i> Weather Outlook</h3>
+        <canvas id="tempChart" height="200"></canvas>
+      </div>
+      <div class="panel-block">
+        <h3 class="panel-block-title"><i data-feather="map-pin"></i> Season Snowfall</h3>
+        <canvas id="seasonChart" height="200"></canvas>
+      </div>
+    </div>
 
-  <!-- ── RIGHT PANEL ── -->
-  <aside class="right-panel">
-    <div class="panel-block">
-      <h3 class="panel-block-title"><i data-feather="star"></i> Top Powder Picks</h3>
-      <div id="powderPicks" class="picks-list"></div>
-    </div>
-    <div class="panel-block">
-      <h3 class="panel-block-title"><i data-feather="thermometer"></i> Current Conditions</h3>
-      <div id="conditionsSummary" class="conditions-summary"></div>
-    </div>
-    <div class="panel-block">
-      <h3 class="panel-block-title"><i data-feather="sun"></i> Weather Outlook</h3>
-      <canvas id="tempChart" height="160"></canvas>
-    </div>
-    <div class="panel-block">
-      <h3 class="panel-block-title"><i data-feather="map-pin"></i> Season Snowfall</h3>
-      <canvas id="seasonChart" height="160"></canvas>
-    </div>
-  </aside>
+  </div>
 
 </main>
 
@@ -243,13 +243,17 @@
   </div>
 </section>
 
-<!-- ══════════════════════ RESORT DETAIL MODAL ══════════════════════ -->
-<div id="resortModal" class="modal-overlay" hidden>
-  <div class="modal">
-    <button class="modal-close" id="modalClose"><i data-feather="x"></i></button>
-    <div id="modalContent"></div>
+<!-- ══════════════════════ RESORT DETAIL VIEW ══════════════════════ -->
+<section id="view-resort-detail" class="full-view" hidden>
+  <div class="full-view-inner">
+    <button class="back-btn" id="backBtn">
+      <i data-feather="arrow-left"></i> Back
+    </button>
+    <div id="resortDetailContent"></div>
   </div>
-</div>
+</section>
+
+<!-- ══════════════════════ ADD RESORT MODAL (kept for ref, not used for detail) ══════════════════════ -->
 
 <!-- ══════════════════════ ADD RESORT MODAL ══════════════════════ -->
 <div id="addResortModal" class="modal-overlay" hidden>
