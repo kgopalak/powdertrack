@@ -4,6 +4,7 @@
 
 /* ── Reset & Base ─────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
 
 :root {
   --bg-darkest:  #0b1120;
@@ -355,7 +356,10 @@ button { cursor: pointer; font-family: inherit; }
    ══════════════════════════════════════════════════════════════ */
 .overview-section {
   display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+  margin-top: 1.5rem;
 }
+/* Chart panels need explicit height so Chart.js knows how tall to render */
+#tempChart, #seasonChart { height: 190px !important; }
 
 /* ══════════════════════════════════════════════════════════════
    PANEL BLOCK (shared by overview + right panel remnants)
