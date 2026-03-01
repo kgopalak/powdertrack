@@ -250,6 +250,7 @@ const WeatherAPI = (() => {
     snowfallNextHours,
     weatherCodeToText,
     weatherCodeToVisibility,
+    weatherCodeToSurface,
     mergeIntoResort,
   };
 })();
