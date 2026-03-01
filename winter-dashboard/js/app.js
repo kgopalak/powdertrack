@@ -24,6 +24,8 @@ let state = {
   reportSortDir: -1,
   dataStatus: "mock",
   lastFetch: null,
+  modelData: {},
+  modelToggles: { gfs: false, ecmwf_ifs: false, ecmwf_aifs: false },
 };
 
 let previousView = "resorts";
@@ -31,7 +33,6 @@ let forecastChart = null;
 let forecastChartFull = null;
 let tempChartInst = null;
 let seasonChartInst = null;
-let modelCompareChart = null;
 
 // ── Helpers: Dates ─────────────────────────────────────────
 function forecastDates(count = 7) {
@@ -149,7 +150,12 @@ function setupControls() {
   // Forecast chart resort select (forecasts view)
   document.getElementById("fcViewResortSelect").addEventListener("change", (e) => {
     const resort = RESORTS.find(r => r.id === +e.target.value);
-    if (resort) renderForecastChartFull(resort);
+    if (resort) {
+      state.modelToggles = { gfs: false, ecmwf_ifs: false, ecmwf_aifs: false };
+      document.querySelectorAll("#modelToggles input[type='checkbox']").forEach(cb => { cb.checked = false; });
+      document.getElementById("modelInfoSection").hidden = true;
+      renderForecastChartFull(resort);
+    }
   });
 
   // Back button (resort detail view)
@@ -169,11 +175,13 @@ function setupControls() {
     saveCustomResort();
   });
 
-  // Compare Models button
-  document.getElementById("compareModelsBtn")?.addEventListener("click", () => {
-    const sel = document.getElementById("fcViewResortSelect");
-    const resort = RESORTS.find(r => r.id === +sel.value) || RESORTS[0];
-    fetchAndRenderModelComparison(resort);
+  // Model toggle checkboxes
+  document.querySelectorAll("#modelToggles input[type='checkbox']").forEach(cb => {
+    cb.addEventListener("change", (e) => {
+      const model = e.target.dataset.model;
+      state.modelToggles[model] = e.target.checked;
+      handleModelToggle(model, e.target.checked);
+    });
   });
 
   // Live badge click to refresh
@@ -602,37 +610,59 @@ function renderForecastChartFull(resort) {
   const snowData = resort.forecast.map(d => d.snow);
   const tempData = resort.forecast.map(d => d.high);
 
-  forecastChartFull = new Chart(ctx, {
-    data: {
-      labels,
-      datasets: [
-        {
-          type: "bar",
-          label: "Snowfall (in)",
-          data: snowData,
-          backgroundColor: "rgba(99,179,237,0.75)",
-          borderColor: "rgba(99,179,237,1)",
-          borderWidth: 1,
-          yAxisID: "ySnow",
-          order: 2,
-          borderRadius: 4,
-        },
-        {
-          type: "line",
-          label: "High Temp (°F)",
-          data: tempData,
-          borderColor: "#f97316",
-          backgroundColor: "rgba(249,115,22,0.08)",
-          fill: true,
-          tension: 0.4,
-          pointBackgroundColor: "#f97316",
-          pointRadius: 6,
-          pointHoverRadius: 8,
-          yAxisID: "yTemp",
-          order: 1,
-        },
-      ],
+  const datasets = [
+    {
+      type: "bar",
+      label: "Consensus Snow (in)",
+      data: snowData,
+      backgroundColor: "rgba(99,179,237,0.75)",
+      borderColor: "rgba(99,179,237,1)",
+      borderWidth: 1,
+      yAxisID: "ySnow",
+      order: 10,
+      borderRadius: 4,
     },
+    {
+      type: "line",
+      label: "High Temp (°F)",
+      data: tempData,
+      borderColor: "#f97316",
+      backgroundColor: "rgba(249,115,22,0.08)",
+      fill: true,
+      tension: 0.4,
+      pointBackgroundColor: "#f97316",
+      pointRadius: 6,
+      pointHoverRadius: 8,
+      yAxisID: "yTemp",
+      order: 1,
+    },
+  ];
+
+  const modelColors = { gfs: "#ef4444", ecmwf_ifs: "#a78bfa", ecmwf_aifs: "#2dd4bf" };
+  const resortModels = state.modelData[resort.id] || {};
+  for (const [model, color] of Object.entries(modelColors)) {
+    if (!state.modelToggles[model]) continue;
+    const parsed = resortModels[model];
+    if (!parsed) continue;
+    datasets.push({
+      type: "line",
+      label: WeatherAPI.MODEL_CONFIG[model].label + " Snow",
+      data: parsed.map(d => d.snow),
+      borderColor: color,
+      borderDash: [6, 3],
+      backgroundColor: "transparent",
+      fill: false,
+      tension: 0.3,
+      pointRadius: 4,
+      pointHoverRadius: 6,
+      borderWidth: 2.5,
+      yAxisID: "ySnow",
+      order: 2,
+    });
+  }
+
+  forecastChartFull = new Chart(ctx, {
+    data: { labels, datasets },
     options: {
       responsive: true,
       maintainAspectRatio: false,
@@ -650,7 +680,8 @@ function renderForecastChartFull(resort) {
           callbacks: {
             label: (ctx) => {
               if (ctx.dataset.label.includes("Snow")) return ` ${ctx.raw}" snowfall`;
-              return ` ${ctx.raw}°F high`;
+              if (ctx.dataset.label.includes("Temp")) return ` ${ctx.raw}°F high`;
+              return ` ${ctx.raw}`;
             }
           }
         }
@@ -1048,6 +1079,7 @@ function renderResortDetail(id) {
         <button class="fav-btn-detail ${state.favorites.includes(r.id) ? 'active' : ''}" data-id="${r.id}">
           ${state.favorites.includes(r.id) ? '★ Saved' : '☆ Save to Favorites'}
         </button>
+        ${r.custom ? `<button class="btn-delete-resort" data-id="${r.id}"><i data-feather="trash-2"></i> Delete</button>` : ''}
       </div>
     </div>
 
@@ -1126,6 +1158,32 @@ function renderResortDetail(id) {
     e.currentTarget.textContent = state.favorites.includes(r.id) ? '★ Saved' : '☆ Save to Favorites';
     e.currentTarget.classList.toggle("active", state.favorites.includes(r.id));
   });
+
+  document.querySelector(".btn-delete-resort")?.addEventListener("click", (e) => {
+    const id = +e.currentTarget.dataset.id;
+    if (confirm(`Delete "${r.name}" from your custom resorts?`)) deleteCustomResort(id);
+  });
+}
+
+function deleteCustomResort(id) {
+  const idx = RESORTS.findIndex(r => r.id === id);
+  if (idx !== -1) RESORTS.splice(idx, 1);
+
+  const saved = JSON.parse(localStorage.getItem("pt_custom_resorts") || "[]");
+  localStorage.setItem("pt_custom_resorts", JSON.stringify(saved.filter(r => r.id !== id)));
+
+  const favIdx = state.favorites.indexOf(id);
+  if (favIdx !== -1) {
+    state.favorites.splice(favIdx, 1);
+    localStorage.setItem("pt_favorites", JSON.stringify(state.favorites));
+  }
+
+  buildChartResortSelect();
+  renderResorts();
+  updateStats();
+  renderSidePanels();
+  renderFavorites();
+  switchView("resorts");
 }
 
 // ── Add Resort Modal ───────────────────────────────────────
@@ -1149,14 +1207,18 @@ function saveCustomResort() {
   const tempF   = parseInt(document.getElementById("ar-temp").value) || 28;
   const webcam  = document.getElementById("ar-webcam").value.trim();
   const trailmap = document.getElementById("ar-trailmap").value.trim();
+  const lat     = parseFloat(document.getElementById("ar-lat").value);
+  const lon     = parseFloat(document.getElementById("ar-lon").value);
+  const elevBase   = parseInt(document.getElementById("ar-elev-base").value) || 0;
+  const elevSummit = parseInt(document.getElementById("ar-elev-summit").value) || 0;
 
-  if (!name || !region || !country) return;
+  if (!name || !region || !country || isNaN(lat) || isNaN(lon)) return;
 
   const newId = Math.max(...RESORTS.map(r => r.id)) + 1;
 
   const resort = {
     id: newId, name, region, country, state: state_,
-    elevation: { base: 0, summit: 0 },
+    elevation: { base: elevBase, summit: elevSummit },
     base_in: base, new48h_in: new48h,
     forecast7d_in: Math.round(new48h * 2.5),
     open_trails: 0, total_trails: 0, lifts_open: 0, lifts_total: 0,
@@ -1168,7 +1230,7 @@ function saveCustomResort() {
     })),
     season_total_in: 0, avalanche_danger: "Unknown",
     last_updated: new Date().toISOString().slice(0, 16).replace("T", " "),
-    lat: 0, lon: 0,
+    lat, lon,
     webcam_url: webcam, trail_map_url: trailmap,
     trail_map_pdf_url: trailmap.toLowerCase().endsWith(".pdf") ? trailmap : "",
     custom: true,
@@ -1185,6 +1247,17 @@ function saveCustomResort() {
   updateStats();
   renderSidePanels();
   closeAddResortModal();
+
+  if (typeof WeatherAPI !== "undefined" && lat !== 0 && lon !== 0) {
+    WeatherAPI.fetchForecast(resort, "best_match").then(apiData => {
+      if (apiData) {
+        Object.assign(resort, WeatherAPI.mergeIntoResort(resort, apiData));
+        renderResorts();
+        updateStats();
+        renderSidePanels();
+      }
+    }).catch(() => {});
+  }
 }
 
 // ── Live Weather Data ─────────────────────────────────────
@@ -1249,154 +1322,76 @@ function renderLiveStatus() {
   }
 }
 
-// ── Model Comparison ──────────────────────────────────────
-async function fetchAndRenderModelComparison(resort) {
+// ── Model Comparison (inline toggles) ─────────────────────
+async function handleModelToggle(model, enabled) {
   if (typeof WeatherAPI === "undefined") return;
+  const sel = document.getElementById("fcViewResortSelect");
+  const resort = RESORTS.find(r => r.id === +sel.value) || RESORTS[0];
+  const rid = resort.id;
 
-  const section = document.getElementById("modelCompareSection");
-  section.hidden = false;
-  document.getElementById("modelCompareResortLabel").textContent =
-    `Snowfall predictions for ${resort.name}`;
-
-  document.getElementById("modelInfoGrid").innerHTML =
-    '<div class="model-loading">Fetching forecasts from 4 models\u2026</div>';
-
-  const allData = await WeatherAPI.fetchAllModels(resort);
-
-  renderModelCompareChart(resort, allData);
-  renderModelInfoCards(allData);
-  section.scrollIntoView({ behavior: "smooth", block: "start" });
-}
-
-function renderModelCompareChart(resort, allData) {
-  const canvas = document.getElementById("modelCompareChart");
-  const ctx = canvas.getContext("2d");
-  if (modelCompareChart) modelCompareChart.destroy();
-
-  const models = Object.keys(WeatherAPI.MODEL_CONFIG);
-  const colors = {
-    best_match: { border: "#63b3ed", bg: "rgba(99,179,237,0.2)" },
-    gfs:        { border: "#f97316", bg: "rgba(249,115,22,0.2)" },
-    ecmwf_ifs:  { border: "#a78bfa", bg: "rgba(167,139,250,0.2)" },
-    ecmwf_aifs: { border: "#2dd4bf", bg: "rgba(45,212,191,0.2)" },
-  };
-
-  const datasets = [];
-  let labels = null;
-
-  for (const model of models) {
-    const raw = allData[model];
-    if (!raw) continue;
-    const parsed = WeatherAPI.parseDailyForecast(raw);
-    if (!parsed.length) continue;
-
-    if (!labels) {
-      labels = parsed.map(d => {
-        const dt = new Date(d.date + "T12:00:00");
-        const dayNames = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-        return `${dayNames[dt.getDay()]} ${dt.getMonth()+1}/${dt.getDate()}`;
-      });
+  if (enabled && (!state.modelData[rid] || !state.modelData[rid][model])) {
+    try {
+      const data = await WeatherAPI.fetchForecast(resort, model);
+      if (!state.modelData[rid]) state.modelData[rid] = {};
+      state.modelData[rid][model] = data ? WeatherAPI.parseDailyForecast(data) : null;
+    } catch (e) {
+      if (!state.modelData[rid]) state.modelData[rid] = {};
+      state.modelData[rid][model] = null;
     }
-
-    const c = colors[model] || colors.best_match;
-    datasets.push({
-      label: WeatherAPI.MODEL_CONFIG[model].label,
-      data: parsed.map(d => d.snow),
-      borderColor: c.border,
-      backgroundColor: c.bg,
-      fill: false,
-      tension: 0.3,
-      pointRadius: 5,
-      pointHoverRadius: 7,
-      borderWidth: 2,
-    });
   }
 
-  if (!labels || datasets.length === 0) {
-    canvas.parentElement.innerHTML =
-      '<p style="text-align:center;color:var(--text-dim);padding:2rem">No model data available</p>';
-    return;
-  }
-
-  modelCompareChart = new Chart(ctx, {
-    type: "line",
-    data: { labels, datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: "index", intersect: false },
-      plugins: {
-        legend: {
-          display: true,
-          labels: { color: "#94a3b8", boxWidth: 12, font: { size: 12 } }
-        },
-        tooltip: {
-          backgroundColor: "#1a2535",
-          borderColor: "#334155",
-          borderWidth: 1,
-          callbacks: {
-            label: (tip) => ` ${tip.dataset.label}: ${tip.raw}" snow`
-          }
-        }
-      },
-      scales: {
-        y: {
-          grid: { color: "rgba(255,255,255,0.06)" },
-          ticks: { color: "#94a3b8", callback: v => v + '"' },
-          title: { display: true, text: "Snowfall (in)", color: "#63b3ed" },
-        },
-        x: {
-          grid: { color: "rgba(255,255,255,0.06)" },
-          ticks: { color: "#94a3b8" },
-        },
-      },
-    },
-  });
+  renderForecastChartFull(resort);
+  updateModelInfoCards(resort);
 }
 
-function renderModelInfoCards(allData) {
-  const models = Object.keys(WeatherAPI.MODEL_CONFIG);
+function updateModelInfoCards(resort) {
+  const anyOn = Object.values(state.modelToggles).some(v => v);
+  const section = document.getElementById("modelInfoSection");
+  section.hidden = !anyOn;
+  if (!anyOn) return;
+
+  const resortModels = state.modelData[resort.id] || {};
   const descriptions = {
-    best_match: "Auto-selects the best available model for this location and time range.",
     gfs:        "NOAA Global Forecast System. 28km resolution. Updated 4x daily.",
     ecmwf_ifs:  "European Centre IFS. 9km resolution. Industry gold standard.",
     ecmwf_aifs: "ECMWF AIFS ML model. AI-powered, trained on ERA5 reanalysis data.",
   };
-  const dotColors = {
-    best_match: "var(--accent-blue)",
-    gfs:        "var(--accent-orange)",
-    ecmwf_ifs:  "var(--accent-purple)",
-    ecmwf_aifs: "var(--accent-teal)",
-  };
+  const dotColors = { gfs: "#ef4444", ecmwf_ifs: "#a78bfa", ecmwf_aifs: "#2dd4bf" };
 
-  document.getElementById("modelInfoGrid").innerHTML = models.map(m => {
-    const cfg = WeatherAPI.MODEL_CONFIG[m];
-    const data = allData[m];
-    const parsed = data ? WeatherAPI.parseDailyForecast(data) : [];
-    const total = Math.round(parsed.reduce((s, d) => s + d.snow, 0) * 10) / 10;
-    const maxDay = parsed.reduce((best, d) =>
-      d.snow > best.snow ? d : best, { snow: 0, day: "\u2014" });
-    const available = data !== null;
+  document.getElementById("modelInfoGrid").innerHTML = ["gfs", "ecmwf_ifs", "ecmwf_aifs"]
+    .filter(m => state.modelToggles[m])
+    .map(m => {
+      const parsed = resortModels[m];
+      if (!parsed) return `
+        <div class="model-info-card model-unavailable">
+          <div class="model-info-header">
+            <span class="model-color-dot" style="background:${dotColors[m]}"></span>
+            <span class="model-info-name">${WeatherAPI.MODEL_CONFIG[m].label}</span>
+          </div>
+          <p class="model-info-desc">${descriptions[m]}</p>
+          <p class="model-info-unavailable">Data unavailable</p>
+        </div>`;
 
-    return `
-    <div class="model-info-card ${available ? '' : 'model-unavailable'}">
-      <div class="model-info-header">
-        <span class="model-color-dot" style="background:${dotColors[m]}"></span>
-        <span class="model-info-name">${cfg.label}</span>
-      </div>
-      <p class="model-info-desc">${descriptions[m]}</p>
-      ${available ? `
-        <div class="model-info-stats">
-          <div class="model-info-stat">
-            <div class="model-info-val">${Math.round(total * 10) / 10}"</div>
-            <div class="model-info-lbl">7-Day Total</div>
+      const total = Math.round(parsed.reduce((s, d) => s + d.snow, 0) * 10) / 10;
+      const peak = parsed.reduce((best, d) => d.snow > best.snow ? d : best, { snow: 0 });
+
+      return `
+        <div class="model-info-card">
+          <div class="model-info-header">
+            <span class="model-color-dot" style="background:${dotColors[m]}"></span>
+            <span class="model-info-name">${WeatherAPI.MODEL_CONFIG[m].label}</span>
           </div>
-          <div class="model-info-stat">
-            <div class="model-info-val">${maxDay.snow}"</div>
-            <div class="model-info-lbl">Peak Day (${maxDay.day})</div>
+          <p class="model-info-desc">${descriptions[m]}</p>
+          <div class="model-info-stats">
+            <div class="model-info-stat">
+              <div class="model-info-val">${total}"</div>
+              <div class="model-info-lbl">7-Day Total</div>
+            </div>
+            <div class="model-info-stat">
+              <div class="model-info-val">${peak.snow}"</div>
+              <div class="model-info-lbl">Peak Day</div>
+            </div>
           </div>
-        </div>
-      ` : '<p class="model-info-unavailable">Data unavailable</p>'}
-    </div>`;
-  }).join("");
+        </div>`;
+    }).join("");
 }

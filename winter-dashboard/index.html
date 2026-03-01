@@ -195,28 +195,35 @@
       </div>
       <div class="fv-controls">
         <select id="fcViewResortSelect" class="chart-select fv-resort-select"></select>
-        <button class="btn-compare-models" id="compareModelsBtn">
-          <i data-feather="layers"></i> Compare Models
-        </button>
       </div>
     </div>
     <div class="forecast-full-chart-wrap">
       <canvas id="forecastChartFull"></canvas>
     </div>
+    <div class="model-toggles" id="modelToggles">
+      <span class="model-toggles-label">Overlay models:</span>
+      <label class="model-toggle-item">
+        <input type="checkbox" data-model="gfs" />
+        <span class="model-toggle-dot" style="background:#ef4444"></span>
+        NOAA GFS (28km)
+      </label>
+      <label class="model-toggle-item">
+        <input type="checkbox" data-model="ecmwf_ifs" />
+        <span class="model-toggle-dot" style="background:#a78bfa"></span>
+        ECMWF IFS (9km)
+      </label>
+      <label class="model-toggle-item">
+        <input type="checkbox" data-model="ecmwf_aifs" />
+        <span class="model-toggle-dot" style="background:#2dd4bf"></span>
+        ECMWF AIFS (ML)
+      </label>
+    </div>
+    <div class="model-info-section" id="modelInfoSection" hidden>
+      <div class="model-info-grid" id="modelInfoGrid"></div>
+    </div>
     <div class="forecast-compare-section">
       <h3 class="section-title" style="margin-bottom:1rem">All Resorts — 7-Day Comparison</h3>
       <div id="forecastCompareGrid" class="forecast-compare-grid"></div>
-    </div>
-
-    <div class="model-compare-section" id="modelCompareSection" hidden>
-      <div class="model-compare-header">
-        <h3 class="section-title">ML Model Comparison</h3>
-        <p class="model-compare-subtitle" id="modelCompareResortLabel"></p>
-      </div>
-      <div class="model-compare-chart-wrap">
-        <canvas id="modelCompareChart"></canvas>
-      </div>
-      <div class="model-info-grid" id="modelInfoGrid"></div>
     </div>
   </div>
 </section>
@@ -331,6 +338,27 @@
       <div class="form-row">
         <label class="form-label">Trail Map URL</label>
         <input type="url" id="ar-trailmap" class="form-input" placeholder="https://…" />
+      </div>
+      <div class="form-row two-col">
+        <div>
+          <label class="form-label">Latitude <span style="color:var(--accent-red)">*</span></label>
+          <input type="number" id="ar-lat" class="form-input" placeholder="e.g. 39.63" step="any" min="-90" max="90" required />
+        </div>
+        <div>
+          <label class="form-label">Longitude <span style="color:var(--accent-red)">*</span></label>
+          <input type="number" id="ar-lon" class="form-input" placeholder="e.g. -106.35" step="any" min="-180" max="180" required />
+        </div>
+      </div>
+      <p class="form-hint">Right-click any location on Google Maps to copy coordinates.</p>
+      <div class="form-row two-col">
+        <div>
+          <label class="form-label">Base Elevation (ft)</label>
+          <input type="number" id="ar-elev-base" class="form-input" placeholder="e.g. 8120" min="0" />
+        </div>
+        <div>
+          <label class="form-label">Summit Elevation (ft)</label>
+          <input type="number" id="ar-elev-summit" class="form-input" placeholder="e.g. 11570" min="0" />
+        </div>
       </div>
       <div class="form-actions">
         <button type="button" class="btn-cancel" id="addModalCancelBtn">Cancel</button>

@@ -90,9 +90,9 @@ const WeatherAPI = (() => {
   // Fetch forecasts for all resorts using best_match
   async function fetchAllResorts(resorts) {
     const results = {};
-    // Batch in groups of 4 to respect rate limits
-    for (let i = 0; i < resorts.length; i += 4) {
-      const batch = resorts.slice(i, i + 4);
+    // Batch in groups of 6 to respect rate limits
+    for (let i = 0; i < resorts.length; i += 6) {
+      const batch = resorts.slice(i, i + 6);
       const promises = batch.map(async (r) => {
         try {
           results[r.id] = await fetchForecast(r, "best_match");
