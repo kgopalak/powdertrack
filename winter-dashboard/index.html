@@ -18,6 +18,11 @@
       <span class="logo-text">PowderTrack</span>
     </div>
 
+    <div class="live-badge" id="liveBadge" hidden>
+      <span class="live-dot"></span>
+      <span class="live-text" id="liveBadgeText">Live Data</span>
+    </div>
+
     <nav class="main-nav">
       <a href="#" class="nav-link active" data-view="resorts">Resorts</a>
       <a href="#" class="nav-link" data-view="forecasts">Forecasts</a>
@@ -171,7 +176,7 @@
         <canvas id="tempChart" height="200"></canvas>
       </div>
       <div class="panel-block">
-        <h3 class="panel-block-title"><i data-feather="map-pin"></i> Season Snowfall</h3>
+        <h3 class="panel-block-title"><i data-feather="map-pin"></i> Base Depth</h3>
         <canvas id="seasonChart" height="200"></canvas>
       </div>
     </div>
@@ -190,6 +195,9 @@
       </div>
       <div class="fv-controls">
         <select id="fcViewResortSelect" class="chart-select fv-resort-select"></select>
+        <button class="btn-compare-models" id="compareModelsBtn">
+          <i data-feather="layers"></i> Compare Models
+        </button>
       </div>
     </div>
     <div class="forecast-full-chart-wrap">
@@ -198,6 +206,17 @@
     <div class="forecast-compare-section">
       <h3 class="section-title" style="margin-bottom:1rem">All Resorts — 7-Day Comparison</h3>
       <div id="forecastCompareGrid" class="forecast-compare-grid"></div>
+    </div>
+
+    <div class="model-compare-section" id="modelCompareSection" hidden>
+      <div class="model-compare-header">
+        <h3 class="section-title">ML Model Comparison</h3>
+        <p class="model-compare-subtitle" id="modelCompareResortLabel"></p>
+      </div>
+      <div class="model-compare-chart-wrap">
+        <canvas id="modelCompareChart"></canvas>
+      </div>
+      <div class="model-info-grid" id="modelInfoGrid"></div>
     </div>
   </div>
 </section>
@@ -322,6 +341,7 @@
 </div>
 
 <script src="js/data.js"></script>
+<script src="js/weather-api.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
